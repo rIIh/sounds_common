@@ -54,11 +54,12 @@ class Downloader {
           if (contentLength != 0) percent = lengthReceived / contentLength;
           _showProgress(
               progress, PlaybackDisposition.loading(progress: percent));
-
+          Log.d('File length current = ${lengthReceived}');
           Log.d('Download progress: %${percent * 100} ');
         },
         onDone: () async {
           /// down load is complete
+          Log.d('File length final= ${lengthReceived}');
           await raf.close();
           _showProgress(progress, PlaybackDisposition.loaded());
           Log.d('Completed downloading: $url');
