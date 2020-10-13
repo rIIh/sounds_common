@@ -165,7 +165,7 @@ class Track {
   bool get isFile => _storageType == TrackStorageType.file;
 
   /// True if the track is stored in a flutter asset.
-  bool get isAsset => _storageType == TrackStorageType.file;
+  bool get isAsset => _storageType == TrackStorageType.asset;
 
   /// True if the [Track] media is stored in buffer.
   bool get isBuffer => _storageType == TrackStorageType.buffer;
