@@ -147,7 +147,7 @@ enum PlaybackDispositionState {
   /// The  media has finished loading.
   loaded,
 
-  /// The media load failed due to an error.
+  /// An error occured during media loading or playback.
   error,
 
   /// Once loading has completed the state will change to [playing] and
@@ -155,13 +155,10 @@ enum PlaybackDispositionState {
   /// occurs.
   playing,
 
-  /// When playback is stopped, for whatever reason, you will see a single
-  /// [stopped] state.
-  /// If the starts/stops playback you may see the state switch between
-  /// [stopped] and [playing] multiple times with multiple [playing] items
-  /// each time.
-
-  stopped,
+  /// When playback is completes naturally you will see a single finished
+  /// event. When you see a [PlaybackDisposition] with a stated of [finished]
+  /// it will not have a duration nor a position.
+  finished,
 
   /// The [recording] state is used when a [RecorderPlaybackController] is being
   /// used to attach a [SoundRecorderUI] and a [SoundPlayerUI]. As the recording

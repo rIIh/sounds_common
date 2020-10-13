@@ -1,4 +1,9 @@
 import 'package:meta/meta.dart';
+import 'package:sounds_common/src/media_format/native_media_formats.dart';
+
+import 'package:sounds_platform_interface/sounds_platform_interface.dart';
+
+import 'well_know_media_formats.dart';
 
 abstract class MediaFormat {
   /// The [name] of the [MediaFormat].
@@ -28,18 +33,13 @@ abstract class MediaFormat {
   /// e.g. 'mp3'
   String get extension;
 
-  /// Returns the duration of the audio file at the given [path].
-  /// The audio file at the given path MUST be the of the same
-  /// [MediaFormat] otherwise the result is undefined.
-  Future<Duration> getDuration(String path);
-
   /// Only [MediaFormat]s that natively supported decoding (playback) by the current platform should return
   /// true.
-  Future<bool> get isNativeDecoder;
+  Future<bool> get isNativeDecoder => NativeMediaFormats().isNativeDecoder(this);
 
   /// Only [MediaFormats] that natively supported encoding (recording) by the current platform should return
   /// true.
-  Future<bool> get isNativeEncoder;
+  Future<bool> get isNativeEncoder => NativeMediaFormats().isNativeEncoder(this);
 
   @override
   bool operator ==(covariant MediaFormat other) {
@@ -48,4 +48,43 @@ abstract class MediaFormat {
         numChannels == other.numChannels &&
         bitRate == other.bitRate);
   }
+}
+
+class MediaFormatHelper {
+  /// Creates a MediaFormatProxy from a mediaFormat.
+  static MediaFormatProxy generate(MediaFormat mediaFormat) {
+    var proxy = MediaFormatProxy();
+    proxy.name = mediaFormat.name;
+    proxy.bitRate = mediaFormat.bitRate;
+    proxy.numChannels = mediaFormat.numChannels;
+    proxy.sampleRate = mediaFormat.sampleRate;
+
+    /// We pass these as pigeon doesn't support contants.
+    proxy.adtsAac = WellKnownMediaFormats.adtsAac.name;
+    proxy.capOpus = WellKnownMediaFormats.cafOpus.name;
+    proxy.mp3 = WellKnownMediaFormats.mp3.name;
+    proxy.oggOpus = WellKnownMediaFormats.oggOpus.name;
+    proxy.oggVorbis = WellKnownMediaFormats.oggVorbis.name;
+    proxy.pcm = WellKnownMediaFormats.pcm.name;
+
+    return proxy;
+  }
+
+  static MediaFormatProxy consts() {
+    return generate(_MediaFormatConsts());
+  }
+}
+
+/// Used to pass the set of constants down to the platform.
+class _MediaFormatConsts extends MediaFormat {
+  _MediaFormatConsts() : super.detail(name: 'hack');
+
+  @override
+  String get extension => throw UnimplementedError();
+
+  @override
+  Future<bool> get isNativeDecoder => throw UnimplementedError();
+
+  @override
+  Future<bool> get isNativeEncoder => throw UnimplementedError();
 }

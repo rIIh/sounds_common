@@ -2,6 +2,9 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:meta/meta.dart';
+import 'package:uuid/uuid.dart';
+
+import 'package:sounds_platform_interface/sounds_platform_interface.dart';
 
 import '../sounds_common.dart';
 import 'media_format/audio.dart';
@@ -16,6 +19,10 @@ typedef TrackAction = void Function(Track current);
 ///
 //
 class Track {
+  TrackProxy _proxy;
+
+  /// Unique id allocated to each track.
+  final uuid = Uuid().v4();
   TrackStorageType _storageType;
 
   /// The title of this track
@@ -36,6 +43,8 @@ class Track {
   /// The file that points to the album art of the track
   String albumArtFile;
 
+  final bool autoRelease;
+
   ///
   Audio _audio;
 
@@ -55,7 +64,18 @@ class Track {
   /// Throws [MediaFormatException] if the passed [MediaFormat] is not supported
   /// or if you don't pass the [MediaFormat] and we are unable
   /// to determine the [MediaFormat] from the [path]s extension.
-  Track.fromFile(String path, {MediaFormat mediaFormat}) {
+  ///
+  /// If the [autoRelease] flag is true (the default) then the tracks
+  /// underlying resources will be relased once the track has been played.
+  /// If you repeatedly play a track (e.g. a beep noise) then you can
+  /// set autoRelease to false and after the first playback each
+  /// plaback subsequent playback will re-use the allocated resources.
+  ///
+  /// If you set [autoRelease] to false then you are responsible for
+  /// calling the [Track.release] method to free any resources associated
+  /// with the track.
+  ///
+  Track.fromFile(String path, {MediaFormat mediaFormat, this.autoRelease = true}) {
     if (path == null) {
       throw TrackPathException('The path MUST not be null.');
     }
@@ -73,7 +93,18 @@ class Track {
   }
 
   /// Loads a track from an asset
-  Track.fromAsset(String assetPath, {MediaFormat mediaFormat}) {
+  ///
+  /// If the [autoRelease] flag is true (the default) then the tracks
+  /// underlying resources will be relased once the track has been played.
+  /// If you repeatedly play a track (e.g. a beep noise) then you can
+  /// set autoRelease to false and after the first playback each
+  /// plaback subsequent playback will re-use the allocated resources.
+  ///
+  /// If you set [autoRelease] to false then you are responsible for
+  /// calling the [Track.release] method to free any resources associated
+  /// with the track.
+  ///
+  Track.fromAsset(String assetPath, {MediaFormat mediaFormat, this.autoRelease = true}) {
     if (assetPath == null) {
       throw TrackPathException('The assetPath MUST not be null.');
     }
@@ -83,7 +114,18 @@ class Track {
 
   /// Creates a track from a remote URL.
   /// HTTP and HTTPS are supported
-  Track.fromURL(String url, {MediaFormat mediaFormat}) {
+  ///
+  /// If the [autoRelease] flag is true (the default) then the tracks
+  /// underlying resources will be relased once the track has been played.
+  /// If you repeatedly play a track (e.g. a beep noise) then you can
+  /// set autoRelease to false and after the first playback each
+  /// plaback subsequent playback will re-use the allocated resources.
+  ///
+  /// If you set [autoRelease] to false then you are responsible for
+  /// calling the [Track.release] method to free any resources associated
+  /// with the track.
+  ///
+  Track.fromURL(String url, {MediaFormat mediaFormat, this.autoRelease = true}) {
     if (url == null) {
       throw TrackPathException('The url MUST not be null.');
     }
@@ -99,7 +141,17 @@ class Track {
   /// This is useful if you need to record into a track
   /// backed by a buffer.
   ///
-  Track.fromBuffer(Uint8List buffer, {@required MediaFormat mediaFormat}) {
+  /// If the [autoRelease] flag is true (the default) then the tracks
+  /// underlying resources will be relased once the track has been played.
+  /// If you repeatedly play a track (e.g. a beep noise) then you can
+  /// set autoRelease to false and after the first playback each
+  /// plaback subsequent playback will re-use the allocated resources.
+  ///
+  /// If you set [autoRelease] to false then you are responsible for
+  /// calling the [Track.release] method to free any resources associated
+  /// with the track.
+  ///
+  Track.fromBuffer(Uint8List buffer, {@required MediaFormat mediaFormat, this.autoRelease = true}) {
     buffer ??= Uint8List(0);
 
     _storageType = TrackStorageType.buffer;
@@ -150,16 +202,16 @@ class Track {
     return '${_audio.buffer.hashCode}';
   }
 
-  /// released any system resources.
-  /// Under normal circumstances you don't need to call this
-  /// method all of sounds classes manage it for you.
-  void _release() => _audio.release();
+  /// Released any system resources associated with the [Track]
+  /// If you created the [Track] with [autoRelease] set to true (the default)
+  /// then you don't need to call this
+  /// method as the Sounds classes will manage it for you.
+  void release() => _audio.release();
 
   /// Used to prepare a audio stream for playing.
   /// You should NOT call this method as it is managed
   /// internally.
-  Future _prepareStream(LoadingProgress progress) async =>
-      _audio.prepareStream(progress);
+  Future _prepareStream(LoadingProgress progress) async => _audio.prepareStream(progress);
 
   /// Returns the duration of the track.
   ///
@@ -199,17 +251,16 @@ class Track {
 ///
 /// globl functions to allow us to hide methods from the public api.
 ///
-
-void trackRelease(Track track) => track._release();
+void trackRelease(Track track) {
+  if (track.autoRelease) track.release();
+}
 
 /// Used by the SoundRecorder to update the duration of the
 /// track as the track is recorded into.
-void setTrackDuration(Track track, Duration duration) =>
-    track._audio.setDuration(duration);
+void setTrackDuration(Track track, Duration duration) => track._audio.setDuration(duration);
 
 ///
-Future prepareStream(Track track, LoadingProgress progress) =>
-    track._prepareStream(progress);
+Future prepareStream(Track track, LoadingProgress progress) => track._prepareStream(progress);
 
 /// Returns the uri where this track is currently stored.
 ///
@@ -255,4 +306,37 @@ enum TrackStorageType {
 
   ///
   url
+}
+
+TrackProxy trackProxy(Track track) {
+  if (track._proxy == null) {
+    track._proxy = TrackProxy();
+    track._proxy.uuid = track.uuid;
+  }
+  var proxy = track._proxy;
+
+  proxy.path = track._audio.storagePath;
+  assert(proxy.path != null);
+
+  proxy.mediaFormat = MediaFormatHelper.generate(track.mediaFormat);
+
+  /// The title of this track
+  proxy.title = track.title;
+
+  /// The name of the artist of this track
+  proxy.artist = track.artist;
+
+  /// The album the track belongs.
+  proxy.album = track.album;
+
+  /// The URL that points to the album art of the track
+  proxy.albumArtUrl = track.albumArtUrl;
+
+  /// The asset that points to the album art of the track
+  proxy.albumArtAsset = track.albumArtAsset;
+
+  /// The file that points to the album art of the track
+  proxy.albumArtFile = track.albumArtFile;
+
+  return track._proxy;
 }

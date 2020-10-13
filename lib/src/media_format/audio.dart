@@ -7,6 +7,7 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:sounds_common/src/util/downloader.dart';
 import 'package:sounds_common/src/util/file_util.dart';
 import 'package:sounds_common/src/util/log.dart';
+import 'package:sounds_platform_interface/sounds_platform_interface.dart';
 
 import '../playback_disposition.dart';
 import '../track.dart';
@@ -87,8 +88,7 @@ class Audio {
       try {
         var tempMediaFile = TempMediaFile.empty();
 
-        await Downloader.download(url, tempMediaFile.path,
-            progress: (disposition) {});
+        await Downloader.download(url, tempMediaFile.path, progress: (disposition) {});
 
         _dataBuffer = await FileUtil().readIntoBuffer(tempMediaFile.path);
       } finally {
@@ -127,7 +127,10 @@ class Audio {
 
       var storagePath = _storagePath;
       if (_onDisk && FileUtil().fileLength(storagePath) > 0) {
-        _duration = await mediaFormat.getDuration(_storagePath);
+        var args = GetDuration();
+        args.path = _storagePath;
+        var response = await SoundsToPlatformApi().getDuration(args);
+        _duration = Duration(milliseconds: response.duration);
       }
     }
     return _duration;
@@ -281,8 +284,7 @@ class Audio {
 
   /// Adjust the loading progress as we have multiple stages we go
   /// through when preparing a stream.
-  void _forwardStagedProgress(LoadingProgress loadingProgress,
-      PlaybackDisposition disposition, int stage, int stages) {
+  void _forwardStagedProgress(LoadingProgress loadingProgress, PlaybackDisposition disposition, int stage, int stages) {
     var rewritten = false;
 
     if (disposition.state == PlaybackDispositionState.loading) {
@@ -298,8 +300,7 @@ class Audio {
     if (disposition.state == PlaybackDispositionState.loaded) {
       if (stage != stages) {
         /// if we are not the last stage change 'loaded' into loading.
-        loadingProgress(
-            PlaybackDisposition.loading(progress: stage * (1.0 / stages)));
+        loadingProgress(PlaybackDisposition.loading(progress: stage * (1.0 / stages)));
         rewritten = true;
       }
     }
@@ -310,7 +311,7 @@ class Audio {
 
   @override
   String toString() {
-    var desc = 'MediaFormat: ${mediaFormat?.name ?? "NONE"}';
+    var desc = 'MediaFormat: ${mediaFormat.name}';
     if (_onDisk) {
       desc += 'storage: $_storagePath';
     }
