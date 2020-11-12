@@ -88,7 +88,8 @@ class Audio {
       try {
         var tempMediaFile = TempMediaFile.empty();
 
-        await Downloader.download(url, tempMediaFile.path, progress: (disposition) {});
+        await Downloader.download(url, tempMediaFile.path,
+            progress: (disposition) {});
 
         _dataBuffer = await FileUtil().readIntoBuffer(tempMediaFile.path);
       } finally {
@@ -284,7 +285,8 @@ class Audio {
 
   /// Adjust the loading progress as we have multiple stages we go
   /// through when preparing a stream.
-  void _forwardStagedProgress(LoadingProgress loadingProgress, PlaybackDisposition disposition, int stage, int stages) {
+  void _forwardStagedProgress(LoadingProgress loadingProgress,
+      PlaybackDisposition disposition, int stage, int stages) {
     var rewritten = false;
 
     if (disposition.state == PlaybackDispositionState.loading) {
@@ -300,7 +302,8 @@ class Audio {
     if (disposition.state == PlaybackDispositionState.loaded) {
       if (stage != stages) {
         /// if we are not the last stage change 'loaded' into loading.
-        loadingProgress(PlaybackDisposition.loading(progress: stage * (1.0 / stages)));
+        loadingProgress(
+            PlaybackDisposition.loading(progress: stage * (1.0 / stages)));
         rewritten = true;
       }
     }

@@ -75,7 +75,8 @@ class Track {
   /// calling the [Track.release] method to free any resources associated
   /// with the track.
   ///
-  Track.fromFile(String path, {MediaFormat mediaFormat, this.autoRelease = true}) {
+  Track.fromFile(String path,
+      {MediaFormat mediaFormat, this.autoRelease = true}) {
     if (path == null) {
       throw TrackPathException('The path MUST not be null.');
     }
@@ -104,7 +105,8 @@ class Track {
   /// calling the [Track.release] method to free any resources associated
   /// with the track.
   ///
-  Track.fromAsset(String assetPath, {MediaFormat mediaFormat, this.autoRelease = true}) {
+  Track.fromAsset(String assetPath,
+      {MediaFormat mediaFormat, this.autoRelease = true}) {
     if (assetPath == null) {
       throw TrackPathException('The assetPath MUST not be null.');
     }
@@ -125,7 +127,8 @@ class Track {
   /// calling the [Track.release] method to free any resources associated
   /// with the track.
   ///
-  Track.fromURL(String url, {MediaFormat mediaFormat, this.autoRelease = true}) {
+  Track.fromURL(String url,
+      {MediaFormat mediaFormat, this.autoRelease = true}) {
     if (url == null) {
       throw TrackPathException('The url MUST not be null.');
     }
@@ -151,7 +154,8 @@ class Track {
   /// calling the [Track.release] method to free any resources associated
   /// with the track.
   ///
-  Track.fromBuffer(Uint8List buffer, {@required MediaFormat mediaFormat, this.autoRelease = true}) {
+  Track.fromBuffer(Uint8List buffer,
+      {@required MediaFormat mediaFormat, this.autoRelease = true}) {
     buffer ??= Uint8List(0);
 
     _storageType = TrackStorageType.buffer;
@@ -211,7 +215,8 @@ class Track {
   /// Used to prepare a audio stream for playing.
   /// You should NOT call this method as it is managed
   /// internally.
-  Future _prepareStream(LoadingProgress progress) async => _audio.prepareStream(progress);
+  Future _prepareStream(LoadingProgress progress) async =>
+      _audio.prepareStream(progress);
 
   /// Returns the duration of the track.
   ///
@@ -257,10 +262,12 @@ void trackRelease(Track track) {
 
 /// Used by the SoundRecorder to update the duration of the
 /// track as the track is recorded into.
-void setTrackDuration(Track track, Duration duration) => track._audio.setDuration(duration);
+void setTrackDuration(Track track, Duration duration) =>
+    track._audio.setDuration(duration);
 
 ///
-Future prepareStream(Track track, LoadingProgress progress) => track._prepareStream(progress);
+Future prepareStream(Track track, LoadingProgress progress) =>
+    track._prepareStream(progress);
 
 /// Returns the uri where this track is currently stored.
 ///

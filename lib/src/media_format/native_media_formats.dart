@@ -27,7 +27,8 @@ class NativeMediaFormats implements MediaProvider {
   @override
   Future<List<MediaFormat>> get decoders async {
     if (_decoders == null) {
-      var response = await SoundsToPlatformApi().getNativeDecoderFormats(MediaFormatHelper.consts());
+      var response = await SoundsToPlatformApi()
+          .getNativeDecoderFormats(MediaFormatHelper.consts());
 
       _decoders = _mapNameToFormat(response.mediaFormats);
     }
@@ -41,7 +42,8 @@ class NativeMediaFormats implements MediaProvider {
   @override
   Future<List<MediaFormat>> get encoders async {
     if (_encoders == null) {
-      var response = await SoundsToPlatformApi().getNativeEncoderFormats(MediaFormatHelper.consts());
+      var response = await SoundsToPlatformApi()
+          .getNativeEncoderFormats(MediaFormatHelper.consts());
 
       _encoders = _mapNameToFormat(response.mediaFormats);
     }

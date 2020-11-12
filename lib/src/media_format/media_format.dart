@@ -35,11 +35,13 @@ abstract class MediaFormat {
 
   /// Only [MediaFormat]s that natively supported decoding (playback) by the current platform should return
   /// true.
-  Future<bool> get isNativeDecoder => NativeMediaFormats().isNativeDecoder(this);
+  Future<bool> get isNativeDecoder =>
+      NativeMediaFormats().isNativeDecoder(this);
 
   /// Only [MediaFormats] that natively supported encoding (recording) by the current platform should return
   /// true.
-  Future<bool> get isNativeEncoder => NativeMediaFormats().isNativeEncoder(this);
+  Future<bool> get isNativeEncoder =>
+      NativeMediaFormats().isNativeEncoder(this);
 
   @override
   bool operator ==(covariant MediaFormat other) {
